@@ -19,17 +19,19 @@ const app = express();
 app.use(express.json());
 const allowedOrigins = [
   "http://localhost:5173", // Frontend Local Development URL
-  "https://ecommerce-iota-jade.vercel.app", // <-- Vercel က ပေးတဲ့ သင့် Frontend Domain URL
+  "https://e-commerce-iota-beryl-83.vercel.app", // <-- Vercel က ပေးတဲ့ သင့် Frontend Domain URL အသစ်
+  "https://ecommerce-iota-jade.vercel.app", // <-- အကယ်၍ အရင် Domain လည်း ရှိသေးရင် ထည့်ထားပါ။
   // နောက်ထပ် Custom Domains တွေ ရှိရင် ဒီနေရာမှာ ထပ်ထည့်နိုင်ပါတယ်
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+        // ဒီနေရာမှာ Error Message အသေးစိတ် Log ထုတ်ကြည့်လို့ရပါတယ်
+        console.log(`CORS blocked for origin: ${origin}. Not in allowedOrigins.`);
+        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}.`;
         return callback(new Error(msg), false);
       }
       return callback(null, true);
