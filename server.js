@@ -17,11 +17,11 @@ connectDB();
 const app = express();
 
 app.use(express.json());
+// CORS Configuration (should be next)
 const allowedOrigins = [
   "http://localhost:5173", // Frontend Local Development URL
-  "https://e-commerce-iota-beryl-83.vercel.app", // <-- Vercel က ပေးတဲ့ သင့် Frontend Domain URL အသစ်
-  "https://ecommerce-iota-jade.vercel.app", // <-- အကယ်၍ အရင် Domain လည်း ရှိသေးရင် ထည့်ထားပါ။
-  // နောက်ထပ် Custom Domains တွေ ရှိရင် ဒီနေရာမှာ ထပ်ထည့်နိုင်ပါတယ်
+  "https://e-commerce-iota-beryl-83.vercel.app", // Your Vercel Frontend Domain URL
+  "https://ecommerce-iota-jade.vercel.app", // If you have previous domains
 ];
 
 app.use(
@@ -29,7 +29,6 @@ app.use(
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) === -1) {
-        // ဒီနေရာမှာ Error Message အသေးစိတ် Log ထုတ်ကြည့်လို့ရပါတယ်
         console.log(`CORS blocked for origin: ${origin}. Not in allowedOrigins.`);
         const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}.`;
         return callback(new Error(msg), false);
@@ -42,24 +41,32 @@ app.use(
   })
 );
 
-// Connect Routes
+// 3. Define a simple test route for the root URL
+//    (Optional, but useful for quick health checks)
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
+// 4. API Routes (MUST BE BEFORE ANY 404 HANDLER)
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/orders", orderRoutes);
 
-// Serve static folder (uploads)
-// Use import.meta.url for ESM compatible __dirname
-const __dirname_manual = path.dirname(new URL(import.meta.url).pathname);
+// 5. Static folder for uploaded images (MUST BE BEFORE ANY 404 HANDLER)
+const __dirname_manual = path.dirname(new URL(import.meta.url).pathname); // Re-calculate __dirname for static
 app.use("/uploads", express.static(path.join(__dirname_manual, "/uploads")));
 
-// Error Handling Middleware (no changes)
+// 6. Error Handling Middleware (MUST BE AT THE VERY END, AFTER ALL ROUTES & STATIC FILES)
+
+// 404 Not Found Error Handler (This catches any request that didn't match a route above)
 app.use((req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
   res.status(404);
   next(error);
 });
 
+// General Error Handler (This catches any other unhandled errors in your application)
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode);
@@ -73,5 +80,6 @@ const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  // Debugging: Verify Stripe Secret Key loading directly from process.env
+  // Debugging: Verify Stripe Secret Key loading
+  // You can keep this log for verification.
 });
